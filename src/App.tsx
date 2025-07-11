@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, Stethoscope, MapPin, AlertTriangle, Pill, Camera } from 'lucide-react';
+import { Menu, Stethoscope, MapPin, AlertTriangle, Pill, Camera, Globe } from 'lucide-react';
 import ChatBot from './components/ChatBot';
 import VetFinder from './components/VetFinder';
 import EmergencyAid from './components/EmergencyAid';
@@ -10,19 +10,43 @@ type ActiveComponent = 'home' | 'chat' | 'vet' | 'emergency' | 'prescriptions' |
 
 export default function App() {
   const [activeComponent, setActiveComponent] = useState<ActiveComponent>('home');
+  const [language, setLanguage] = useState<string>('en');
+  const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
+
+  // Get user location on component mount
+  React.useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.log('Location access denied');
+          // Set default location for Sri Lanka Northern Province
+          setLocation({ lat: 9.6615, lng: 80.0255 });
+        }
+      );
+    } else {
+      // Set default location for Sri Lanka Northern Province
+      setLocation({ lat: 9.6615, lng: 80.0255 });
+    }
+  }, []);
 
   const renderActiveComponent = () => {
     switch (activeComponent) {
       case 'chat':
-        return <ChatBot />;
+        return <ChatBot language={language} />;
       case 'vet':
-        return <VetFinder />;
+        return <VetFinder language={language} location={location} />;
       case 'emergency':
-        return <EmergencyAid />;
+        return <EmergencyAid language={language} />;
       case 'prescriptions':
-        return <Prescriptions />;
+        return <Prescriptions language={language} />;
       case 'detection':
-        return <DiseaseDetection />;
+        return <DiseaseDetection language={language} />;
       default:
         return (
           <div className="text-center py-12">
@@ -94,6 +118,17 @@ export default function App() {
               <span>VetCare</span>
             </button>
             <div className="flex space-x-4">
+              <div className="flex items-center space-x-2">
+                <Globe className="h-4 w-4 text-gray-600" />
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="en">English</option>
+                  <option value="ta">தமிழ்</option>
+                </select>
+              </div>
               <button
                 onClick={() => setActiveComponent('chat')}
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
