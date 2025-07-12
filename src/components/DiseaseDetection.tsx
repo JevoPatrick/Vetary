@@ -44,6 +44,7 @@ const translations = {
 
 const DiseaseDetection: React.FC<DiseaseDetectionProps> = ({ language }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedAnimal, setSelectedAnimal] = useState<string>('');
   const [analyzing, setAnalyzing] = useState(false);
   const [results, setResults] = useState<any>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -65,13 +66,19 @@ const DiseaseDetection: React.FC<DiseaseDetectionProps> = ({ language }) => {
     setAnalyzing(true);
     setResults(null);
 
+    if (!selectedAnimal) {
+      alert(language === 'en' ? 'Please select an animal type first' : 'முதலில் விலங்கு வகையை தேர்ந்தெடுக்கவும்');
+      setAnalyzing(false);
+      return;
+    }
+
     // Simulate AI analysis
     await new Promise(resolve => setTimeout(resolve, 3000));
 
     // Mock disease detection results
     const mockResults = {
-      animal: 'Dog',
-      disease: 'Skin Dermatitis',
+      animal: selectedAnimal,
+      disease: getRandomDisease(selectedAnimal),
       confidence: 85,
       severity: 'Moderate',
       symptoms: ['Redness', 'Itching', 'Hair loss', 'Inflammation'],
@@ -91,6 +98,23 @@ const DiseaseDetection: React.FC<DiseaseDetectionProps> = ({ language }) => {
 
     setResults(mockResults);
     setAnalyzing(false);
+  };
+
+  const getRandomDisease = (animal: string) => {
+    const diseases = {
+      'Dogs': ['Skin Dermatitis', 'Hip Dysplasia', 'Kennel Cough', 'Parvovirus'],
+      'Cats': ['Upper Respiratory Infection', 'Feline Leukemia', 'Urinary Tract Infection'],
+      'Poultry': ['Avian Influenza', 'Newcastle Disease', 'Coccidiosis'],
+      'Cattle': ['Mastitis', 'Foot and Mouth Disease', 'Bovine Respiratory Disease'],
+      'Pigs': ['Swine Flu', 'African Swine Fever', 'Porcine Reproductive Syndrome'],
+      'நாய்கள்': ['தோல் அழற்சி', 'இடுப்பு சிதைவு', 'கென்னல் இருமல்', 'பார்வோவைரஸ்'],
+      'பூனைகள்': ['மேல் சுவாச நோய்த்தொற்று', 'பூனை லுகேமியா', 'சிறுநீர் பாதை நோய்த்தொற்று'],
+      'கோழி': ['பறவை காய்ச்சல்', 'நியூகாஸில் நோய்', 'கோக்சிடியோசிஸ்'],
+      'மாட்டு': ['பால்மடி அழற்சி', 'கால் மற்றும் வாய் நோய்', 'மாட்டு சுவாச நோய்'],
+      'பன்றி': ['பன்றி காய்ச்சல்', 'ஆப்பிரிக்க பன்றி காய்ச்சல்', 'பன்றி இனப்பெருக்க நோய்க்குறி']
+    };
+    const animalDiseases = diseases[animal as keyof typeof diseases] || diseases['Dogs'];
+    return animalDiseases[Math.floor(Math.random() * animalDiseases.length)];
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -186,16 +210,51 @@ const DiseaseDetection: React.FC<DiseaseDetectionProps> = ({ language }) => {
       {/* Supported Animals */}
       <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">{t.supportedAnimals}</h3>
+        <p className="text-sm text-gray-600 mb-4">
+          {language === 'en' 
+            ? 'Select the animal type you want to analyze:' 
+            : 'நீங்கள் பகுப்பாய்வு செய்ய விரும்பும் விலங்கு வகையை தேர்ந்தெடுக்கவும்:'
+          }
+        </p>
         <div className="grid grid-cols-5 gap-4">
           {t.animals.map((animal, index) => (
-            <div key={index} className="text-center">
-              <div className="bg-blue-100 p-3 rounded-full mb-2 mx-auto w-16 h-16 flex items-center justify-center">
+            <button
+              key={index}
+              onClick={() => setSelectedAnimal(animal)}
+              className={`text-center p-4 rounded-lg border-2 transition-all duration-200 hover:scale-105 ${
+                selectedAnimal === animal
+                  ? 'border-blue-600 bg-blue-50 shadow-lg'
+                  : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+              }`}
+            >
+              <div className={`p-3 rounded-full mb-2 mx-auto w-16 h-16 flex items-center justify-center transition-colors ${
+                selectedAnimal === animal ? 'bg-blue-200' : 'bg-blue-100'
+              }`}>
                 <span className="text-2xl">🐾</span>
               </div>
-              <p className="text-sm font-medium text-gray-700">{animal}</p>
-            </div>
+              <p className={`text-sm font-medium ${
+                selectedAnimal === animal ? 'text-blue-800' : 'text-gray-700'
+              }`}>
+                {animal}
+              </p>
+              {selectedAnimal === animal && (
+                <div className="mt-2">
+                  <div className="w-2 h-2 bg-blue-600 rounded-full mx-auto"></div>
+                </div>
+              )}
+            </button>
           ))}
         </div>
+        {selectedAnimal && (
+          <div className="mt-4 p-3 bg-green-50 rounded-lg">
+            <p className="text-sm text-green-800">
+              {language === 'en' 
+                ? `Selected: ${selectedAnimal}. You can now upload an image or video for analysis.`
+                : `தேர்ந்தெடுக்கப்பட்டது: ${selectedAnimal}. இப்போது நீங்கள் பகுப்பாய்வுக்காக ஒரு படம் அல்லது வீடியோவை பதிவேற்றலாம்.`
+              }
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Analysis Status */}
